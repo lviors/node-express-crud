@@ -1,35 +1,71 @@
-const express = require('express');
-const db = require('./db');
-const util = require('util');
-const crypt = require('./crypt');
+const express = require('express')
 
-const app = express();
-const port = process.env.PORT || 5000;
+const db = require('./db')
+const util = require('util')
+const crypt = require('./hash')
+const bodyParser = require('body-parser')
 
-app.get('/', (req, res) => {
-    res.send('Dashboard');
-});
+const app = express()
+app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({extended: true}))
+const port = process.env.PORT || 5000
 
-const asyncQuery = util.promisify(db.query).bind(db);
+app.get('/', (req, res) => {res.send('Dashboard')})
 
-app.get('/users', async (req, response, next) => {
-    try {      
-        const username = 'admin';
-        const password = 'c7ad44cbad762a5da0a452f9e854fdc1e0e7a52a38015f23f3eab1d80b931dd472634dfac71cd34ebc35d16ab7fb8a90c81f975113d6c7538dc69dd8de9077ec';
-        
-        console.log(crypt.encrypt('admin'))
+const AsyncQuery = util.promisify(db.query).bind(db)
 
-        const rows = await asyncQuery('SELECT * FROM login WHERE Username=? && Password=?',[username,password])
-        response.send(rows)
+app.post('/user/add', async (req, res, next) => {
+    try {
+        const username = req.body.Username
+        const nama = req.body.Nama
+        const password = crypt.encrypt(req.body.Password)
+        const createBy = req.body.CreateBy
+        const rows = await AsyncQuery(`CALL AddUser('${username}', '${nama}','${password}', ${createBy})`)
+        res.send(rows)
     } 
     catch (err) {
-        console.log(err.message);
-        next(err);
+        console.log(err.message)
+        next(err)
     }
-});
+})
 
-app.listen(port, () => {
-    console.log(`Listen on ${port}`);
-});
+app.put('/user/edit', async (req, res, next) => {
+    try {
+        const userID = req.body.UserID
+        const username = req.body.Username
+        const password = crypt.encrypt(req.body.Password)
+        const updateBy = req.body.UpdateBy
+        const rows = await AsyncQuery(`CALL EditUser('${userID}', '${username}','${password}', ${updateBy})`)
+        res.send(password)
+    } 
+    catch (err) {
+        console.log(err.message)
+        next(err)
+    }
+})
+
+app.post('/user/login', async (req, res, next) => {
+    try {
+        const username = req.body.Username
+        const password = crypt.encrypt(req.body.Password)
+
+        const rows = await AsyncQuery(`CALL Login('${username}', '${password}')`)
+        if (rows[0].length > 0) {
+            res.send({status: true, message: ''})
+        } 
+        else {
+            res.json({status: false, message: 'Username atau Password Salah'})
+        }
+    } 
+    catch (err) {
+        console.log(err.message)
+        next(err)
+    }
+})
+
+
+
+app.listen(port, () => {console.log(`Listen on ${port}`)})
 
 // https://prod.liveshare.vsengsaas.visualstudio.com/join?2FEC82433903F74493FBBC40C7AB20D5EF40
+// https://prod.liveshare.vsengsaas.visualstudio.com/join?5D1F4DC01F8CB359612BCE33C61D5003EE08
