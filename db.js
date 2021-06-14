@@ -1,11 +1,10 @@
 const mysql = require('mysql')
-const config = require('./config')
 
 var connection = mysql.createConnection({
-    host: config.HOST,
-    user: config.USER,
-    password: config.PASSWORD,
-    database: config.DB
+    host: '192.168.0.55',
+    user: 'dbapayroll',
+    password: 'payroll123',
+    database: 'payroll'
 })
 
-module.exports = connection;
+module.exports = connection
