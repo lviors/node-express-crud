@@ -153,6 +153,28 @@ app.get('/pegawai/get', async (req, res, next) => {
     }
 })
 
+app.post('/gaji', async (req, res, next) => {
+    try {
+        const idPegawai = req.body.ID_Pegawai
+        const hariKerja = req.body.Hari_Kerja
+        const tunjangan = req.body.Tunjangan
+        const jamLembur = req.body.Jam_Lembur
+        const uangLembur = req.body.Uang_Lembur
+        const potongan = req.body.Potongan
+        const totalGaji = req.body.Total_Gaji
+        const periode = req.body.Periode
+        const createBy = req.body.CreateBy
+
+        const rows = await AsyncQuery(`CALL Add_Gaji('${idPegawai}', '${hariKerja}', 
+        '${tunjangan}', '${jamLembur}', ${uangLembur}, '${potongan}, ${totalGaji}, ${periode}, ${createBy})`)
+
+        res.send(rows)
+    }
+    catch (err) {
+        console.log(err.message)
+        next(err)
+    }
+})
 
 
 const port = process.env.PORT || 5000
